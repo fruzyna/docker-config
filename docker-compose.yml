@@ -1,14 +1,23 @@
 version: '2'
 
+# docker volumes in /var/lib/docker/volumes
 volumes:
-  reverse-proxy:
   nextcloud-db:
-  nextcloud-app:
-  mc-spigot:
-  finance:
+  nextcloud-config:
+  nextcloud-data:
+  home-assistant:
+  plex:
+#  mc-spigot:
+
+# TODO:
+# Verify new nextcloud setup works
+# Integrate linuxserver/ddclient
+# Move plex data to external drive
+# Automate updates
+# Status monitor
 
 services:
-  # NGINX reverse proxy to make some stuff accessible to the outside world
+  # reverse proxy with let's encrypt to allow outside access with only standard ports
   reverse-proxy:
     image: linuxserver/letsencrypt
     container_name: reverse-proxy
@@ -18,89 +27,137 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=America/Chicago
-      - URL=mail929.com
-      - SUBDOMAINS=cloud,otd,
+      - URL=[domain]
+      - SUBDOMAINS=[subdomains],
       - VALIDATION=http
-      - EMAIL=liamfruzyna@gmail.com
+      - EMAIL=[email]
       - DHLEVEL=2048
       - ONLY_SUBDOMAINS=false
-      - EXTRA_DOMAINS=
+      - EXTRA_DOMAINS=[other domains]
       - STAGING=false
     volumes:
-      - reverse-proxy:/config
+      - ./reverse-proxy:/config/nginx/proxy-confs
     ports:
       - 443:443
       - 80:80
     restart: unless-stopped
 
-  # MariaDB database for Nextcloud
   nextcloud-db:
-    image: mariadb
+    image: linuxsever/mariadb
     container_name: nextcloud-db
     command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
-    volumes:
-      - nextcloud-db:/var/lib/mysql
-      - /etc/localtime:/etc/localtime:ro
     environment:
-      - MYSQL_ROOT_PASSWORD=[db-root-pw]
-      - MYSQL_PASSWORD=[db-user-pw]
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Chicago
+      - MYSQL_ROOT_PASSWORD=[password]
+      - MYSQL_PASSWORD=[password]
       - MYSQL_DATABASE=nextcloud-db
       - MYSQL_USER=nextcloud
+    volumes:
+      - nextcloud-db:/config
+#    ports:
+#      - 3306:3306
     restart: unless-stopped
 
-  # personal Nextcloud instance
   nextcloud-app:
-    image: nextcloud
+    image: linuxserver/nextcloud
     container_name: nextcloud-app
     links:
       - nextcloud-db
-    volumes:
-      - nextcloud-app:/var/www/html
-      - /etc/localtime:/etc/localtime:ro
-#    ports:
-#      - 8082:80
-    restart: unless-stopped
-
-  # Spigot Minecraft Server that I may use one day
-  mc-spigot:
-    image: itzg/minecraft-server
-    container_name: mc-spigot
     environment:
-      EULA: "true"
-      TYPE: SPIGOT
-      VERSION: 1.14.4
-      OPS: Mail929
-      SERVER_NAME: MAIL-SPIGOT
-      MOTD: Stay away...
-    command: --noconsole
-    ports:
-      - 25565:25565
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Chicago
     volumes:
-      - mc-spigot:/data
+      - nextcloud-config:/config
+      - nextcloud-data:/data
+#    ports:
+#      - 8080:80
     restart: unless-stopped
 
-  # my personal finances webapp
-  finance:
-    build: finance
-    container_name: finance
-    ports:
-      - 8080:8080
+  home-assistant:
+    image: homeassistant/home-assistant
+    container_name: home-assistant
     volumes:
-      - finance:/root/.config/finance
+      - home-assistant:/config
+    network_mode: host
     restart: unless-stopped
 
-  # NGINX web server to run my OTD Calculator website @ otd.mail929.com
+  plex:
+    image: linuxserver/plex
+    container_name: plex
+    network_mode: host
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Chicago
+      - VERSION=public
+      - UMASK_SET=022
+      - PLEX_CLAIM=[claim code]
+    volumes:
+      - plex:/config
+      - /home/mail929/movies:/movies
+      - /home/mail929/tv:/tv
+      - /home/mail929/music:/music
+      - /home/mail929/photos:/photos
+      - /home/mail929/videos:/videos
+#    ports:
+#      - 32400:32400
+    restart: unless-stopped
+
   otd-calcs-web:
-    build: otd
+    image: linuxserver/nginx
     container_name: otd-calcs-web
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Chicago
+    volumes:
+      - ./otd-calcs-web:/config/www
 #    ports:
 #      - 8081:80
     restart: unless-stopped
 
-  # web redirect from mail929.com to mail929.github.io
-  redirect:
-    image: morbz/docker-web-redirect
-    container_name: redirect
+  homepage:
+    image: linuxserver/nginx
+    container_name: homepage
     environment:
-      - REDIRECT_TARGET=mail929.github.io
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Chicago
+    volumes:
+      - ./homepage:/config/www
+#    ports:
+#      - 8082:80
     restart: unless-stopped
+
+  personal-site:
+    image: linuxserver/nginx
+    container_name: personal-site
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Chicago
+    volumes:
+      - ./personal-site:/config/www
+#    ports:
+#      - 8083:80
+    restart: unless-stopped
+
+#  mc-spigot:
+#    image: itzg/minecraft-server
+#    container_name: mc-spigot
+#    environment:
+#      EULA: "true"
+#      TYPE: SPIGOT
+#      VERSION: 1.14.4
+#      OPS: Mail929
+#      SERVER_NAME: MAIL-SPIGOT
+#      MOTD: Stay away...
+#    command: --noconsole
+#    ports:
+#      - 25565:25565
+#    volumes:
+#      - mc-spigot:/data
+#    restart: unless-stopped

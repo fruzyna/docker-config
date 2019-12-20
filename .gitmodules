@@ -1,0 +1,9 @@
+[submodule "otd-calcs-web"]
+	path = otd-calcs-web
+	url = git@github.com:mail929/otd-calcs-web
+[submodule "homepage"]
+	path = homepage
+	url = git@github.com:mail929/homepage
+[submodule "personal-site"]
+	path = personal-site
+	url = git@github.com:mail929/personal-site
