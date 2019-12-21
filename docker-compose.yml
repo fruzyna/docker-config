@@ -3,8 +3,7 @@ version: '2'
 # docker volumes in /var/lib/docker/volumes
 volumes:
   nextcloud-db:
-  nextcloud-config:
-  nextcloud-data:
+  nextcloud-app:
   home-assistant:
   plex:
 #  mc-spigot:
