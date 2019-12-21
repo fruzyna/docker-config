@@ -43,35 +43,29 @@ services:
     restart: unless-stopped
 
   nextcloud-db:
-    image: linuxsever/mariadb
+    image: mariadb
     container_name: nextcloud-db
     command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=America/Chicago
       - MYSQL_ROOT_PASSWORD=[password]
       - MYSQL_PASSWORD=[password]
       - MYSQL_DATABASE=nextcloud-db
       - MYSQL_USER=nextcloud
     volumes:
-      - nextcloud-db:/config
+      - nextcloud-db:/var/lib/mysql
+      - /etc/localtime:/etc/localtime:ro
 #    ports:
 #      - 3306:3306
     restart: unless-stopped
 
   nextcloud-app:
-    image: linuxserver/nextcloud
+    image: nextcloud
     container_name: nextcloud-app
     links:
       - nextcloud-db
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=America/Chicago
     volumes:
-      - nextcloud-config:/config
-      - nextcloud-data:/data
+      - nextcloud-app:/var/www/html
+      - /etc/localtime:/etc/localtime:ro
 #    ports:
 #      - 8080:80
     restart: unless-stopped
@@ -94,7 +88,7 @@ services:
       - TZ=America/Chicago
       - VERSION=public
       - UMASK_SET=022
-      - PLEX_CLAIM=[claim code]
+#      - PLEX_CLAIM=[claim code]
     volumes:
       - plex:/config
       - /home/mail929/movies:/movies
@@ -102,8 +96,6 @@ services:
       - /home/mail929/music:/music
       - /home/mail929/photos:/photos
       - /home/mail929/videos:/videos
-#    ports:
-#      - 32400:32400
     restart: unless-stopped
 
   otd-calcs-web:
