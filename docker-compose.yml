@@ -35,7 +35,7 @@ services:
       - EXTRA_DOMAINS=[other domains]
       - STAGING=false
     volumes:
-      - ./reverse-proxy:/config/nginx/proxy-confs
+      - ./proxy-confs:/config/nginx/proxy-confs
     ports:
       - 443:443
       - 80:80
