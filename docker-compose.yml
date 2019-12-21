@@ -70,8 +70,10 @@ services:
     restart: unless-stopped
 
   home-assistant:
-    image: homeassistant/home-assistant
+    image: homeassistant/home-assistant:stable
     container_name: home-assistant
+    environment:
+      - TZ=America/Chicago
     volumes:
       - home-assistant:/config
     network_mode: host
