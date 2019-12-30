@@ -1,22 +1,12 @@
 version: '2'
 
-# docker volumes in /var/lib/docker/volumes
-volumes:
-  nextcloud-db:
-  nextcloud-app:
-  home-assistant:
-  plex:
-#  mc-spigot:
-
 # TODO:
-# Verify new nextcloud setup works
 # Integrate linuxserver/ddclient
-# Move plex data to external drive
 # Automate updates
 # Status monitor
 
 services:
-  # reverse proxy with let's encrypt to allow outside access with only standard ports
+  
   reverse-proxy:
     image: linuxserver/letsencrypt
     container_name: reverse-proxy
@@ -36,6 +26,7 @@ services:
       - STAGING=false
     volumes:
       - ./proxy-confs:/config/nginx/proxy-confs
+      - ./personal-site:/config/www
     ports:
       - 443:443
       - 80:80
@@ -51,7 +42,7 @@ services:
       - MYSQL_DATABASE=nextcloud-db
       - MYSQL_USER=nextcloud
     volumes:
-      - nextcloud-db:/var/lib/mysql
+      - /lakefront/nextcloud/db:/var/lib/mysql
       - /etc/localtime:/etc/localtime:ro
 #    ports:
 #      - 3306:3306
@@ -63,7 +54,7 @@ services:
     links:
       - nextcloud-db
     volumes:
-      - nextcloud-app:/var/www/html
+      - /lakefront/nextcloud/app:/var/www/html
       - /etc/localtime:/etc/localtime:ro
 #    ports:
 #      - 8080:80
@@ -75,7 +66,7 @@ services:
     environment:
       - TZ=America/Chicago
     volumes:
-      - home-assistant:/config
+      - /lakefront/config/home-assistant:/config
     network_mode: host
     restart: unless-stopped
 
@@ -89,14 +80,15 @@ services:
       - TZ=America/Chicago
       - VERSION=public
       - UMASK_SET=022
-#      - PLEX_CLAIM=[claim code]
+      - PLEX_CLAIM=[claim code]
     volumes:
-      - plex:/config
-      - /home/mail929/movies:/movies
-      - /home/mail929/tv:/tv
-      - /home/mail929/music:/music
-      - /home/mail929/photos:/photos
-      - /home/mail929/videos:/videos
+      - /lakefront/config/plex:/config
+      - /lakefront/movies:/movies
+      - /lakefront/tv:/tv
+      - /lakefront/music:/music
+      - /lakefront/photos:/photos
+      - /lakefront/mom/Pictures:/mom
+      - /lakefront/videos:/videos
     restart: unless-stopped
 
   otd-calcs-web:
@@ -125,32 +117,12 @@ services:
 #      - 8082:80
     restart: unless-stopped
 
-  personal-site:
-    image: linuxserver/nginx
-    container_name: personal-site
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=America/Chicago
+  mqtt:
+    image: eclipse-mosquitto
+    container_name: mqtt
     volumes:
-      - ./personal-site:/config/www
-#    ports:
-#      - 8083:80
+      - /lakefront/config/mqtt:/mosquitto
+    ports:
+      - 1883:1883
+      - 9001:9001
     restart: unless-stopped
-
-#  mc-spigot:
-#    image: itzg/minecraft-server
-#    container_name: mc-spigot
-#    environment:
-#      EULA: "true"
-#      TYPE: SPIGOT
-#      VERSION: 1.14.4
-#      OPS: Mail929
-#      SERVER_NAME: MAIL-SPIGOT
-#      MOTD: Stay away...
-#    command: --noconsole
-#    ports:
-#      - 25565:25565
-#    volumes:
-#      - mc-spigot:/data
-#    restart: unless-stopped
