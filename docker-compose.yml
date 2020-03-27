@@ -1,23 +1,22 @@
-version: '2'
-
-# docker volumes in /var/lib/docker/volumes
-volumes:
-  nextcloud-db:
-  nextcloud-config:
-  nextcloud-data:
-  home-assistant:
-  plex:
-#  mc-spigot:
-
-# TODO:
-# Verify new nextcloud setup works
-# Integrate linuxserver/ddclient
-# Move plex data to external drive
-# Automate updates
-# Status monitor
+version: '3.6'
 
 services:
-  # reverse proxy with let's encrypt to allow outside access with only standard ports
+
+  #
+  # Domain Control
+  #
+
+  ddclient:
+    image: linuxserver/ddclient
+    container_name: ddclient
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Chicago
+    volumes:
+      - /lakefront/config/ddclient:/config
+    restart: unless-stopped
+
   reverse-proxy:
     image: linuxserver/letsencrypt
     container_name: reverse-proxy
@@ -27,32 +26,45 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=America/Chicago
-      - URL=[domain]
-      - SUBDOMAINS=[subdomains],
+      - FILE__URL=/run/secrets/DOMAIN
+      - FILE__SUBDOMAINS=/run/secrets/SUBDOMAINS
       - VALIDATION=http
-      - EMAIL=[email]
+      - FILE__EMAIL=/run/secrets/EMAIL
       - DHLEVEL=2048
       - ONLY_SUBDOMAINS=false
-      - EXTRA_DOMAINS=[other domains]
+      - FILE__EXTRA_DOMAINS=/run/secrets/EXTRA_DOMAINS
       - STAGING=false
+    secrets:
+      - EMAIL
+      - DOMAIN
+      - SUBDOMAINS
+      - EXTRA_DOMAINS
     volumes:
-      - ./reverse-proxy:/config/nginx/proxy-confs
+      - ./proxy-confs:/config/nginx/proxy-confs
+      - ./personal-site:/config/www
     ports:
-      - 443:443
       - 80:80
+      - 443:443
     restart: unless-stopped
+
+  #
+  # Nextcloud
+  #
 
   nextcloud-db:
     image: mariadb
     container_name: nextcloud-db
     command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
     environment:
-      - MYSQL_ROOT_PASSWORD=[password]
-      - MYSQL_PASSWORD=[password]
+      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/MYSQL_ROOT_PASSWORD
+      - MYSQL_PASSWORD_FILE=/run/secrets/MYSQL_PASSWORD
       - MYSQL_DATABASE=nextcloud-db
       - MYSQL_USER=nextcloud
+    secrets:
+      - MYSQL_ROOT_PASSWORD
+      - MYSQL_PASSWORD
     volumes:
-      - nextcloud-db:/var/lib/mysql
+      - /lakefront/nextcloud/db:/var/lib/mysql
       - /etc/localtime:/etc/localtime:ro
 #    ports:
 #      - 3306:3306
@@ -64,19 +76,44 @@ services:
     links:
       - nextcloud-db
     volumes:
-      - nextcloud-app:/var/www/html
+      - /lakefront/nextcloud/app:/var/www/html
       - /etc/localtime:/etc/localtime:ro
 #    ports:
 #      - 8080:80
     restart: unless-stopped
 
+  #
+  # Home Assistant (Core)
+  #
+
+  mqtt:
+    image: eclipse-mosquitto
+    container_name: mqtt
+    volumes:
+      - /lakefront/config/mqtt:/mosquitto
+    ports:
+      - 1883:1883
+      - 9001:9001
+    restart: unless-stopped
+
   home-assistant:
     image: homeassistant/home-assistant
     container_name: home-assistant
+    environment:
+      - TZ=America/Chicago
     volumes:
-      - home-assistant:/config
+      - /lakefront/config/home-assistant:/config
+    devices:
+      - /dev/ttyUSB0:/dev/ttyUSB0
+      - /dev/ttyUSB1:/dev/ttyUSB1
     network_mode: host
+#    ports:
+#      - 8086:80
     restart: unless-stopped
+
+  #
+  # Plex
+  #
 
   plex:
     image: linuxserver/plex
@@ -88,15 +125,38 @@ services:
       - TZ=America/Chicago
       - VERSION=public
       - UMASK_SET=022
-#      - PLEX_CLAIM=[claim code]
+      - FILE__PLEX_CLAIM=/run/secrets/PLEX_CLAIM
+    secrets:
+      - PLEX_CLAIM
     volumes:
-      - plex:/config
-      - /home/mail929/movies:/movies
-      - /home/mail929/tv:/tv
-      - /home/mail929/music:/music
-      - /home/mail929/photos:/photos
-      - /home/mail929/videos:/videos
+      - /lakefront/config/plex:/config
+      - /lakefront/movies:/movies
+      - /lakefront/tv:/tv
+      - /lakefront/music:/music
+      - /lakefront/photos:/photos
+      - /lakefront/mom/Pictures:/mom
+      - /lakefront/videos:/videos
+#    ports:
+#      - 8087:80
     restart: unless-stopped
+
+  #
+  # LibreSpeed
+  #
+
+  speedtest:
+    image: adolfintel/speedtest
+    container_name: speedtest
+    environment:
+      - MODE=standalone
+      - TELEMETRY=false
+#    ports:
+#      - 8084:80
+    restart: unless-stopped
+
+  #
+  # NGINX Web Servers
+  #
 
   otd-calcs-web:
     image: linuxserver/nginx
@@ -124,32 +184,33 @@ services:
 #      - 8082:80
     restart: unless-stopped
 
-  personal-site:
-    image: linuxserver/nginx
-    container_name: personal-site
+  wildrank:
+    image: python:3
+    container_name: wildrank
+    working_dir: /www
+    command: python post-server.py
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=America/Chicago
     volumes:
-      - ./personal-site:/config/www
+      - ./wildrank:/www
 #    ports:
-#      - 8083:80
+#      - 8086:80
     restart: unless-stopped
 
-#  mc-spigot:
-#    image: itzg/minecraft-server
-#    container_name: mc-spigot
-#    environment:
-#      EULA: "true"
-#      TYPE: SPIGOT
-#      VERSION: 1.14.4
-#      OPS: Mail929
-#      SERVER_NAME: MAIL-SPIGOT
-#      MOTD: Stay away...
-#    command: --noconsole
-#    ports:
-#      - 25565:25565
-#    volumes:
-#      - mc-spigot:/data
-#    restart: unless-stopped
+secrets:
+  PLEX_CLAIM:
+    file: ./secrets/plex_claim
+  EMAIL:
+    file: ./secrets/email
+  DOMAIN:
+    file: ./secrets/domain
+  SUBDOMAINS:
+    file: ./secrets/subdomains
+  EXTRA_DOMAINS:
+    file: ./secrets/extra_domains
+  MYSQL_PASSWORD:
+    file: ./secrets/mysql_password
+  MYSQL_ROOT_PASSWORD:
+    file: ./secrets/mysql_root_password
