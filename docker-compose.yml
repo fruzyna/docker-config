@@ -3,7 +3,7 @@ version: '3.6'
 services:
 
   #
-  # Domain Control
+  # Networking
   #
 
   ddclient:
@@ -14,7 +14,7 @@ services:
       - PGID=1000
       - TZ=America/Chicago
     volumes:
-      - /lakefront/config/ddclient:/config
+      - /westside/config/ddclient:/config
     restart: unless-stopped
 
   reverse-proxy:
@@ -47,9 +47,176 @@ services:
       - 443:443
     restart: unless-stopped
 
+  unifi:
+    image: linuxserver/unifi-controller
+    container_name: unifi
+    network_mode: host
+    environment:
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - /westside/config/unifi:/config
+    restart: unless-stopped
+
+#  wireguard:
+#    image: linuxserver/wireguard
+#    container_name: wireguard
+#    cap_add:
+#      - NET_ADMIN
+#      - SYS_MODULE
+#    environment:
+#      - PUID=1000
+#      - PGID=1000
+#      - TZ=America/Chicago
+#      - SERVERURL=apt.fruzyna.net
+#      - SERVERPORT=51820
+#      - PEERS=5
+#      - INTERNAL_SUBNET=192.168.69.0
+#    volumes:
+#      - /westside/config/wireguard:/config
+#      - /lib/modules:/lib/modules
+#    ports:
+#      - 51820:51820/udp
+#    sysctls:
+#      - net.ipv4.conf.all.src_valid_mark=1
+#    restart: unless-stopped
+
   #
-  # Nextcloud
+  # Services 
   #
+
+  adminer:
+    image: adminer
+    container_name: adminer
+    depends_on:
+      - finance-db
+    ports:
+      - 8083:8080
+    restart: unless-stopped
+
+  code-server:
+    image: linuxserver/code-server
+    container_name: code-server
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Chicago
+      - PASSWORD=[password]
+      - SUDO_PASSWORD=[password]
+    secrets:
+      - CODE_PASSWORD
+    volumes:
+      - /westside/config:/configs
+      - /dropbox:/dropbox
+    restart: unless-stopped
+
+  finance-app:
+    image: node
+    container_name: finance-app
+    working_dir: /app
+    command: ./install-and-start.sh
+    depends_on:
+      - finance-db
+    volumes:
+      - ./finance-v2:/app
+    restart: unless-stopped
+
+  finance-db:
+    image: mariadb
+    container_name: finance-db
+    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+    environment:
+      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/MYSQL_ROOT_PASSWORD
+      - MYSQL_PASSWORD_FILE=/run/secrets/MYSQL_PASSWORD
+      - MYSQL_DATABASE=finance-db
+      - MYSQL_USER=finance
+    secrets:
+      - MYSQL_ROOT_PASSWORD
+      - MYSQL_PASSWORD
+    volumes:
+      - /westside/config/finance/db:/var/lib/mysql
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - 3306:3306
+    restart: unless-stopped
+
+  gitea-app:
+    image: gitea/gitea
+    container_name: gitea-app
+    depends_on:
+      - gitea-db
+    volumes:
+      - /westside/config/gitea:/data
+    ports:
+      - 2222:0022
+    restart: unless-stopped
+
+  gitea-db:
+    image: mariadb
+    container_name: gitea-db
+    environment:
+      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/MYSQL_ROOT_PASSWORD
+      - MYSQL_PASSWORD_FILE=/run/secrets/MYSQL_PASSWORD
+      - MYSQL_DATABASE=gitea-db
+      - MYSQL_USER=gitea
+    secrets:
+      - MYSQL_ROOT_PASSWORD
+      - MYSQL_PASSWORD
+    volumes:
+      - /westside/databases/gitea:/var/lib/mysql
+      - /etc/localtime:/etc/localtime:ro
+    restart: unless-stopped
+
+  home-assistant:
+    image: homeassistant/home-assistant
+    container_name: home-assistant
+    depends_on:
+      - mqtt
+    environment:
+      - TZ=America/Chicago
+    volumes:
+      - /westside/config/home-assistant:/config
+    devices:
+      - /dev/ttyUSB0:/dev/ttyUSB0
+      - /dev/ttyUSB1:/dev/ttyUSB1
+    network_mode: host
+    restart: unless-stopped
+
+  mqtt:
+    image: eclipse-mosquitto
+    container_name: mqtt
+    volumes:
+      - /westside/config/mqtt:/mosquitto
+    ports:
+      - 1883:1883
+      - 9001:9001
+    restart: unless-stopped
+
+  netbootxyz:
+    image: linuxserver/netbootxyz
+    container_name: netbootxyz
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Chicago
+    volumes:
+      - /westside/config/pxe:/config
+      - /westside/images:/assets
+    ports:
+      - 8081:3000
+      - 69:69/udp
+      - 8082:80
+    restart: unless-stopped
+
+  nextcloud-app:
+    image: nextcloud
+    container_name: nextcloud-app
+    depends_on:
+      - nextcloud-db
+    volumes:
+      - /westside/config/nextcloud:/var/www/html
+      - /etc/localtime:/etc/localtime:ro
+    restart: unless-stopped
 
   nextcloud-db:
     image: mariadb
@@ -64,56 +231,9 @@ services:
       - MYSQL_ROOT_PASSWORD
       - MYSQL_PASSWORD
     volumes:
-      - /lakefront/nextcloud/db:/var/lib/mysql
+      - /westside/databases/nextcloud:/var/lib/mysql
       - /etc/localtime:/etc/localtime:ro
-#    ports:
-#      - 3306:3306
     restart: unless-stopped
-
-  nextcloud-app:
-    image: nextcloud
-    container_name: nextcloud-app
-    links:
-      - nextcloud-db
-    volumes:
-      - /lakefront/nextcloud/app:/var/www/html
-      - /etc/localtime:/etc/localtime:ro
-#    ports:
-#      - 8080:80
-    restart: unless-stopped
-
-  #
-  # Home Assistant (Core)
-  #
-
-  mqtt:
-    image: eclipse-mosquitto
-    container_name: mqtt
-    volumes:
-      - /lakefront/config/mqtt:/mosquitto
-    ports:
-      - 1883:1883
-      - 9001:9001
-    restart: unless-stopped
-
-  home-assistant:
-    image: homeassistant/home-assistant:stable
-    container_name: home-assistant
-    environment:
-      - TZ=America/Chicago
-    volumes:
-      - /lakefront/config/home-assistant:/config
-    devices:
-      - /dev/ttyUSB0:/dev/ttyUSB0
-      - /dev/ttyUSB1:/dev/ttyUSB1
-    network_mode: host
-#    ports:
-#      - 8086:80
-    restart: unless-stopped
-
-  #
-  # Plex
-  #
 
   plex:
     image: linuxserver/plex
@@ -129,20 +249,13 @@ services:
     secrets:
       - PLEX_CLAIM
     volumes:
-      - /lakefront/config/plex:/config
-      - /lakefront/movies:/movies
-      - /lakefront/tv:/tv
-      - /lakefront/music:/music
-      - /lakefront/photos:/photos
-      - /lakefront/mom/Pictures:/mom
-      - /lakefront/videos:/videos
-#    ports:
-#      - 8087:80
+      - /westside/config/plex:/config
+      - /westside/media/movies:/movies
+      - /westside/media/tv:/tv
+      - /westside/media/music:/music
+      - /westside/media/videos:/videos
+      - /westside/mom/Megan Pictures:/mom:ro
     restart: unless-stopped
-
-  #
-  # LibreSpeed
-  #
 
   speedtest:
     image: adolfintel/speedtest
@@ -150,25 +263,56 @@ services:
     environment:
       - MODE=standalone
       - TELEMETRY=false
-#    ports:
-#      - 8084:80
+    # port held open for internal network testing
+    ports:
+      - 8888:80
+    restart: unless-stopped
+
+  statping:
+    image: statping/statping
+    container_name: statping
+    environment:
+      DB_CONN: sqlite
+    volumes:
+      - /westside/config/statping:/app
+    restart: unless-stopped
+
+  telegram:
+    image: mail929/telegram-react
+    container_name: telegram
+    environment:
+      - REACT_APP_TELEGRAM_API_ID_FILE=/run/secrets/TELEGRAM_API_ID
+      - REACT_APP_TELEGRAM_API_HASH_FILE=/run/secrets/TELEGRAM_API_HASH
+    secrets:
+      - TELEGRAM_API_ID
+      - TELEGRAM_API_HASH
+    restart: unless-stopped
+
+  wiki:
+    image: linuxserver/wikijs
+    container_name: wiki
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Chicago
+    volumes:
+      - /westside/config/wiki:/config
+      - /westside/databases/wiki:/data
     restart: unless-stopped
 
   #
   # NGINX Web Servers
   #
 
-  otd-calcs-web:
+  climate:
     image: linuxserver/nginx
-    container_name: otd-calcs-web
+    container_name: climate
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=America/Chicago
     volumes:
-      - ./otd-calcs-web:/config/www
-#    ports:
-#      - 8081:80
+      - ./climatechangeisreal:/config/www
     restart: unless-stopped
 
   homepage:
@@ -180,24 +324,46 @@ services:
       - TZ=America/Chicago
     volumes:
       - ./homepage:/config/www
-#    ports:
-#      - 8082:80
+    restart: unless-stopped
+
+  otd-calcs-web:
+    image: linuxserver/nginx
+    container_name: otd-calcs-web
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Chicago
+    volumes:
+      - ./otd-calcs-web:/config/www
     restart: unless-stopped
 
   wildrank:
     image: python:3
     container_name: wildrank
     working_dir: /www
-    command: python post-server.py
+    command: python python/post-server.py
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=America/Chicago
     volumes:
       - ./wildrank:/www
-#    ports:
-#      - 8086:80
     restart: unless-stopped
+
+  #
+  # Games
+  #
+
+#  minecraft:
+#    image: itzg/minecraft-server
+#    container_name: minecraft
+#    environment:
+#      - EULA=TRUE
+#    volumes:
+#      - /westside/config/minecraft:/data
+#    ports:
+#      - 25565:25565
+#    restart: unless-stopped
 
 secrets:
   PLEX_CLAIM:
@@ -214,3 +380,9 @@ secrets:
     file: ./secrets/mysql_password
   MYSQL_ROOT_PASSWORD:
     file: ./secrets/mysql_root_password
+  CODE_PASSWORD:
+    file: ./secrets/code_password
+  TELEGRAM_API_ID:
+    file: ./secrets/telegram_api_id
+  TELEGRAM_API_HASH:
+    file: ./secrets/telegram_api_hash
