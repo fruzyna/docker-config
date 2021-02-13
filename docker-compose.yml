@@ -1,4 +1,4 @@
-version: '3.6'
+version: '3.7'
 
 services:
 
@@ -18,8 +18,9 @@ services:
     restart: unless-stopped
 
   reverse-proxy:
-    image: linuxserver/letsencrypt
+    image: linuxserver/swag
     container_name: reverse-proxy
+    network_mode: host
     cap_add:
       - NET_ADMIN
     environment:
@@ -41,6 +42,7 @@ services:
       - EXTRA_DOMAINS
     volumes:
       - ./proxy-confs:/config/nginx/proxy-confs
+      - ./site-confs:/config/nginx/site-confs
       - ./personal-site:/config/www
     ports:
       - 80:80
@@ -58,29 +60,6 @@ services:
       - /westside/config/unifi:/config
     restart: unless-stopped
 
-#  wireguard:
-#    image: linuxserver/wireguard
-#    container_name: wireguard
-#    cap_add:
-#      - NET_ADMIN
-#      - SYS_MODULE
-#    environment:
-#      - PUID=1000
-#      - PGID=1000
-#      - TZ=America/Chicago
-#      - SERVERURL=apt.fruzyna.net
-#      - SERVERPORT=51820
-#      - PEERS=5
-#      - INTERNAL_SUBNET=192.168.69.0
-#    volumes:
-#      - /westside/config/wireguard:/config
-#      - /lib/modules:/lib/modules
-#    ports:
-#      - 51820:51820/udp
-#    sysctls:
-#      - net.ipv4.conf.all.src_valid_mark=1
-#    restart: unless-stopped
-
   #
   # Services 
   #
@@ -94,20 +73,14 @@ services:
       - 8083:8080
     restart: unless-stopped
 
-  code-server:
-    image: linuxserver/code-server
-    container_name: code-server
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=America/Chicago
-      - PASSWORD=[password]
-      - SUDO_PASSWORD=[password]
-    secrets:
-      - CODE_PASSWORD
+  baikal:
+    image: ckulka/baikal:nginx
+    container_name: baikal
     volumes:
-      - /westside/config:/configs
-      - /dropbox:/dropbox
+      - /westside/config/baikal:/var/www/baikal/config
+      - /westside/databases/baikal:/var/www/baikal/Specific
+    ports:
+      - 8085:80
     restart: unless-stopped
 
   finance-app:
@@ -119,6 +92,8 @@ services:
       - finance-db
     volumes:
       - ./finance-v2:/app
+    ports:
+      - 8086:3000
     restart: unless-stopped
 
   finance-db:
@@ -149,6 +124,7 @@ services:
       - /westside/config/gitea:/data
     ports:
       - 2222:0022
+      - 8087:3000
     restart: unless-stopped
 
   gitea-db:
@@ -176,6 +152,7 @@ services:
       - TZ=America/Chicago
     volumes:
       - /westside/config/home-assistant:/config
+      - /westside/media:/media
     devices:
       - /dev/ttyUSB0:/dev/ttyUSB0
       - /dev/ttyUSB1:/dev/ttyUSB1
@@ -207,32 +184,48 @@ services:
       - 69:69/udp
       - 8082:80
     restart: unless-stopped
-
-  nextcloud-app:
-    image: nextcloud
-    container_name: nextcloud-app
-    depends_on:
-      - nextcloud-db
-    volumes:
-      - /westside/config/nextcloud:/var/www/html
-      - /etc/localtime:/etc/localtime:ro
-    restart: unless-stopped
-
-  nextcloud-db:
-    image: mariadb
-    container_name: nextcloud-db
-    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+  
+  photoprism:
+    image: photoprism/photoprism
+    container_name: photoprism
+    user: "1000:1000"
+    security_opt:
+      - seccomp:unconfined
+      - apparmor:unconfined
     environment:
-      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/MYSQL_ROOT_PASSWORD
-      - MYSQL_PASSWORD_FILE=/run/secrets/MYSQL_PASSWORD
-      - MYSQL_DATABASE=nextcloud-db
-      - MYSQL_USER=nextcloud
-    secrets:
-      - MYSQL_ROOT_PASSWORD
-      - MYSQL_PASSWORD
+      PHOTOPRISM_ADMIN_PASSWORD: ""
+      PHOTOPRISM_DEBUG: "false"
+      PHOTOPRISM_PUBLIC: "false"
+      PHOTOPRISM_READONLY: "false"
+      PHOTOPRISM_UPLOAD_NSFW: "true"
+      PHOTOPRISM_DETECT_NSFW: "false"
+      PHOTOPRISM_EXPERIMENTAL: "false"
+      PHOTOPRISM_SITE_URL: "http://photos.fruzyna.net/"
+      PHOTOPRISM_SITE_TITLE: "PhotoPrism"
+      PHOTOPRISM_SITE_CAPTION: "Browse Your Life"
+      PHOTOPRISM_SITE_DESCRIPTION: ""
+      PHOTOPRISM_SITE_AUTHOR: "Liam Fruzyna"
+      PHOTOPRISM_HTTP_HOST: "0.0.0.0"
+      PHOTOPRISM_HTTP_PORT: 2342
+      PHOTOPRISM_SETTINGS_HIDDEN: "false"
+      PHOTOPRISM_DATABASE_DRIVER: "sqlite"
+      PHOTOPRISM_SIDECAR_JSON: "true"
+      PHOTOPRISM_SIDECAR_YAML: "true"
+      PHOTOPRISM_THUMB_FILTER: "lanczos"
+      PHOTOPRISM_THUMB_UNCACHED: "false"
+      PHOTOPRISM_THUMB_SIZE: 2048
+      PHOTOPRISM_THUMB_SIZE_UNCACHED: 7680
+      PHOTOPRISM_JPEG_SIZE: 7680
+      PHOTOPRISM_JPEG_QUALITY: 92
+      PHOTOPRISM_DARKTABLE_PRESETS: "false"
+      UID: 1000
+      GID: 1000
+      UMASK: 0000
     volumes:
-      - /westside/databases/nextcloud:/var/lib/mysql
-      - /etc/localtime:/etc/localtime:ro
+      - /westside/config/photoprism:/photoprism/storage
+      - /westside/media/pictures:/photoprism/originals
+    ports:
+      - 8091:2342
     restart: unless-stopped
 
   plex:
@@ -268,24 +261,21 @@ services:
       - 8888:80
     restart: unless-stopped
 
-  statping:
-    image: statping/statping
-    container_name: statping
+  syncthing:
+    image: linuxserver/syncthing
+    container_name: syncthing
     environment:
-      DB_CONN: sqlite
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Chicago
     volumes:
-      - /westside/config/statping:/app
-    restart: unless-stopped
-
-  telegram:
-    image: mail929/telegram-react
-    container_name: telegram
-    environment:
-      - REACT_APP_TELEGRAM_API_ID_FILE=/run/secrets/TELEGRAM_API_ID
-      - REACT_APP_TELEGRAM_API_HASH_FILE=/run/secrets/TELEGRAM_API_HASH
-    secrets:
-      - TELEGRAM_API_ID
-      - TELEGRAM_API_HASH
+      - /westside/config/syncthing:/config
+      - /westside/databases/syncthing/phone:/phone
+      - /westside/databases/syncthing/main:/main
+    ports:
+      - 8384:8384
+      - 22000:22000
+      - 21027:21027/udp
     restart: unless-stopped
 
   wiki:
@@ -298,22 +288,13 @@ services:
     volumes:
       - /westside/config/wiki:/config
       - /westside/databases/wiki:/data
+    ports:
+      - 8093:3000
     restart: unless-stopped
 
   #
   # NGINX Web Servers
   #
-
-  climate:
-    image: linuxserver/nginx
-    container_name: climate
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=America/Chicago
-    volumes:
-      - ./climatechangeisreal:/config/www
-    restart: unless-stopped
 
   homepage:
     image: linuxserver/nginx
@@ -324,6 +305,8 @@ services:
       - TZ=America/Chicago
     volumes:
       - ./homepage:/config/www
+    ports:
+      - 8088:80
     restart: unless-stopped
 
   otd-calcs-web:
@@ -335,35 +318,36 @@ services:
       - TZ=America/Chicago
     volumes:
       - ./otd-calcs-web:/config/www
+    ports:
+      - 8090:80
     restart: unless-stopped
 
   wildrank:
-    image: python:3
+    image: mail929/liamrank
     container_name: wildrank
-    working_dir: /www
-    command: python python/post-server.py
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=America/Chicago
+      - TBA_KEY=
     volumes:
-      - ./wildrank:/www
+      - /westside/config/wildrank:/config
+      - /westside/databases/wildrank:/uploads
+    ports:
+      - 8094:80
     restart: unless-stopped
 
   #
   # Games
   #
 
-#  minecraft:
-#    image: itzg/minecraft-server
-#    container_name: minecraft
-#    environment:
-#      - EULA=TRUE
-#    volumes:
-#      - /westside/config/minecraft:/data
-#    ports:
-#      - 25565:25565
-#    restart: unless-stopped
+  minecraft:
+    image: itzg/minecraft-server
+    container_name: minecraft
+    environment:
+      - EULA=TRUE
+    volumes:
+      - /westside/config/minecraft:/data
+    ports:
+      - 25565:25565
+    restart: unless-stopped
 
 secrets:
   PLEX_CLAIM:
@@ -380,9 +364,3 @@ secrets:
     file: ./secrets/mysql_password
   MYSQL_ROOT_PASSWORD:
     file: ./secrets/mysql_root_password
-  CODE_PASSWORD:
-    file: ./secrets/code_password
-  TELEGRAM_API_ID:
-    file: ./secrets/telegram_api_id
-  TELEGRAM_API_HASH:
-    file: ./secrets/telegram_api_hash

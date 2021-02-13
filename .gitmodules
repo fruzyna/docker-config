@@ -1,18 +1,15 @@
 [submodule "otd-calcs-web"]
 	path = otd-calcs-web
-	url = https://github.com/mail929/otd-calcs-web
+	url = https://github.com/fruzyna/otd-calcs-web
 [submodule "homepage"]
 	path = homepage
-	url = https://github.com/mail929/homepage
+	url = https://github.com/fruzyna/homepage
 [submodule "personal-site"]
 	path = personal-site
-	url = https://github.com/mail929/personal-site
+	url = https://github.com/fruzyna/personal-site
 [submodule "wildrank"]
 	path = wildrank
-	url = https://github.com/mail929/wildrank-web
+	url = https://github.com/fruzyna/liamrank
 [submodule "finance-v2"]
 	path = finance-v2
-	url = https://github.com/mail929/finance-v2
-[submodule "climatechangeisreal"]
-	path = climatechangeisreal
-	url = https://github.com/chicago/climatechangeisreal
+	url = https://github.com/fruzyna/finance-v2
