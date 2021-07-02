@@ -44,6 +44,10 @@ services:
       - ./proxy-confs:/config/nginx/proxy-confs
       - ./site-confs:/config/nginx/site-confs
       - ./personal-site:/config/www
+      - ./otd-calcs-web:/config/otd
+      - ./homepage:/config/home
+      - ./rip:/config/rip
+      - ./robot_framework/docs:/config/robot_docs
     ports:
       - 80:80
       - 443:443
@@ -64,14 +68,14 @@ services:
   # Services 
   #
 
-  adminer:
-    image: adminer
-    container_name: adminer
-    depends_on:
-      - finance-db
-    ports:
-      - 8083:8080
-    restart: unless-stopped
+  #adminer:
+  #  image: adminer
+  #  container_name: adminer
+  #  depends_on:
+  #    - finance-db
+  #  ports:
+  #    - 8083:8080
+  #  restart: unless-stopped
 
   baikal:
     image: ckulka/baikal:nginx
@@ -109,7 +113,7 @@ services:
       - MYSQL_ROOT_PASSWORD
       - MYSQL_PASSWORD
     volumes:
-      - /westside/config/finance/db:/var/lib/mysql
+      - /westside/databases/finance:/var/lib/mysql
       - /etc/localtime:/etc/localtime:ro
     ports:
       - 3306:3306
@@ -169,21 +173,21 @@ services:
       - 9001:9001
     restart: unless-stopped
 
-  netbootxyz:
-    image: linuxserver/netbootxyz
-    container_name: netbootxyz
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=America/Chicago
-    volumes:
-      - /westside/config/pxe:/config
-      - /westside/images:/assets
-    ports:
-      - 8081:3000
-      - 69:69/udp
-      - 8082:80
-    restart: unless-stopped
+  #netbootxyz:
+  #  image: linuxserver/netbootxyz
+  #  container_name: netbootxyz
+  #  environment:
+  #    - PUID=1000
+  #    - PGID=1000
+  #    - TZ=America/Chicago
+  #  volumes:
+  #    - /westside/config/pxe:/config
+  #    - /westside/images:/assets
+  #  ports:
+  #    - 8081:3000
+  #    - 69:69/udp
+  #    - 8082:80
+  #  restart: unless-stopped
   
   photoprism:
     image: photoprism/photoprism
@@ -256,26 +260,8 @@ services:
     environment:
       - MODE=standalone
       - TELEMETRY=false
-    # port held open for internal network testing
     ports:
       - 8888:80
-    restart: unless-stopped
-
-  syncthing:
-    image: linuxserver/syncthing
-    container_name: syncthing
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=America/Chicago
-    volumes:
-      - /westside/config/syncthing:/config
-      - /westside/databases/syncthing/phone:/phone
-      - /westside/databases/syncthing/main:/main
-    ports:
-      - 8384:8384
-      - 22000:22000
-      - 21027:21027/udp
     restart: unless-stopped
 
   wiki:
@@ -290,36 +276,6 @@ services:
       - /westside/databases/wiki:/data
     ports:
       - 8093:3000
-    restart: unless-stopped
-
-  #
-  # NGINX Web Servers
-  #
-
-  homepage:
-    image: linuxserver/nginx
-    container_name: homepage
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=America/Chicago
-    volumes:
-      - ./homepage:/config/www
-    ports:
-      - 8088:80
-    restart: unless-stopped
-
-  otd-calcs-web:
-    image: linuxserver/nginx
-    container_name: otd-calcs-web
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=America/Chicago
-    volumes:
-      - ./otd-calcs-web:/config/www
-    ports:
-      - 8090:80
     restart: unless-stopped
 
   wildrank:
