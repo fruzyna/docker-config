@@ -10,3 +10,6 @@
 [submodule "wildrank"]
 	path = wildrank
 	url = https://github.com/fruzyna/liamrank
+[submodule "robot_framework"]
+	path = robot_framework
+	url = https://github.com/wildstang/robot_framework
