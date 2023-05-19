@@ -7,9 +7,12 @@
 [submodule "personal-site"]
 	path = personal-site
 	url = https://github.com/fruzyna/personal-site
-[submodule "wildrank"]
-	path = wildrank
-	url = https://github.com/fruzyna/liamrank
 [submodule "robot_framework"]
 	path = robot_framework
 	url = https://github.com/wildstang/robot_framework
+[submodule "finance-v2"]
+	path = finance-v2
+	url = https://github.com/fruzyna/finance-v2
+[submodule "wedding-site"]
+	path = wedding-site
+	url = https://github.com/fruzyna/wedding-site
