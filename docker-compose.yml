@@ -212,6 +212,30 @@ services:
       - 9001:9001
     restart: unless-stopped
 
+  miniflux-app:
+    image: miniflux/miniflux
+    container_name: miniflux-app
+    depends_on:
+      - miniflux-db
+    environment:
+      - DATABASE_URL=
+      - RUN_MIGRATIONS=1
+    ports:
+      - 8090:8080
+    restart: unless-stopped
+
+  miniflux-db:
+    image: postgres
+    container_name: miniflux-db
+    environment:
+      - POSTGRES_USER=
+      - POSTGRES_PASSWORD=
+    volumes:
+      - /westside/databases/miniflux:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    restart: unless-stopped
+
   photoprism:
     image: photoprism/photoprism
     container_name: photoprism
