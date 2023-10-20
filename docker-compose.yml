@@ -47,7 +47,7 @@ services:
       - ./robot_framework/docs:/config/robot_docs
       - ./ws-links:/config/ws-links
       - ./links:/config/links
-      - ./status:/config/status
+      - ./status-page:/config/status
       - /westside/databases/fileserver:/config/fileserver
     ports:
       - 80:80
