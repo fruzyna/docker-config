@@ -40,11 +40,9 @@ services:
       - SUBDOMAINS
       - EXTRA_DOMAINS
     volumes:
-      - ./proxy-confs:/config/nginx/proxy-confs
-      - ./site-confs:/config/nginx/site-confs
+      - ./nginx:/config/nginx
       - ./personal-site:/config/www
       - ./otd-calcs-web:/config/otd
-      - ./wedding-site:/config/wedding-site
       - ./homepage:/config/home
       - ./robot_framework/docs:/config/robot_docs
       - ./ws-links:/config/ws-links
@@ -226,7 +224,7 @@ services:
     restart: unless-stopped
 
   miniflux-db:
-    image: postgres
+    image: postgres:15
     container_name: miniflux-db
     environment:
       - POSTGRES_USER=
@@ -246,36 +244,17 @@ services:
       - apparmor:unconfined
     environment:
       PHOTOPRISM_ADMIN_PASSWORD: ""
-      PHOTOPRISM_DEBUG: "false"
-      PHOTOPRISM_PUBLIC: "false"
-      PHOTOPRISM_READONLY: "false"
-      PHOTOPRISM_UPLOAD_NSFW: "true"
-      PHOTOPRISM_DETECT_NSFW: "false"
-      PHOTOPRISM_EXPERIMENTAL: "false"
       PHOTOPRISM_SITE_URL: "http://photos.fruzyna.net/"
-      PHOTOPRISM_SITE_TITLE: "PhotoPrism"
-      PHOTOPRISM_SITE_CAPTION: "Browse Your Life"
-      PHOTOPRISM_SITE_DESCRIPTION: ""
       PHOTOPRISM_SITE_AUTHOR: "Liam Fruzyna"
+      PHOTOPRISM_SITE_TITLE: "Liam's Photos"
+      PHOTOPRISM_SITE_CAPTION: ""
+      PHOTOPRISM_SITE_DESCRIPTION: ""
       PHOTOPRISM_HTTP_HOST: "0.0.0.0"
-      PHOTOPRISM_HTTP_PORT: 2342
-      PHOTOPRISM_SETTINGS_HIDDEN: "false"
-      PHOTOPRISM_DATABASE_DRIVER: "sqlite"
-      PHOTOPRISM_SIDECAR_JSON: "true"
-      PHOTOPRISM_SIDECAR_YAML: "true"
-      PHOTOPRISM_THUMB_FILTER: "lanczos"
-      PHOTOPRISM_THUMB_UNCACHED: "false"
-      PHOTOPRISM_THUMB_SIZE: 2048
-      PHOTOPRISM_THUMB_SIZE_UNCACHED: 7680
-      PHOTOPRISM_JPEG_SIZE: 7680
       PHOTOPRISM_JPEG_QUALITY: 92
-      PHOTOPRISM_DARKTABLE_PRESETS: "false"
-      UID: 1000
-      GID: 1000
-      UMASK: 0000
     volumes:
       - /westside/config/photoprism:/photoprism/storage
       - /westside/media/pictures:/photoprism/originals
+      - /photo-import:/photoprism/import
     ports:
       - 8084:2342
     restart: unless-stopped

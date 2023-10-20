@@ -1,1 +1,5 @@
 secrets/
+nginx/*.*
+nginx/proxy-confs/
+*.sample
+!nginx/nginx.conf
