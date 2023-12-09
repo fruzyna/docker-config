@@ -48,6 +48,7 @@ services:
       - ./ws-links:/config/ws-links
       - ./links:/config/links
       - ./status-page:/config/status
+      - ./billy:/config/billy
       - /westside/databases/fileserver:/config/fileserver
     ports:
       - 80:80
