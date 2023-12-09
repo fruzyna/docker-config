@@ -251,6 +251,7 @@ services:
       PHOTOPRISM_SITE_DESCRIPTION: ""
       PHOTOPRISM_HTTP_HOST: "0.0.0.0"
       PHOTOPRISM_JPEG_QUALITY: 92
+      PHOTOPRISM_DISABLE_CHOWN: "true"
     volumes:
       - /westside/config/photoprism:/photoprism/storage
       - /westside/media/pictures:/photoprism/originals
