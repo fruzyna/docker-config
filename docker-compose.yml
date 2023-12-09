@@ -41,14 +41,7 @@ services:
       - EXTRA_DOMAINS
     volumes:
       - ./nginx:/config/nginx
-      - ./personal-site:/config/www
-      - ./otd-calcs-web:/config/otd
-      - ./homepage:/config/home
-      - ./robot_framework/docs:/config/robot_docs
-      - ./ws-links:/config/ws-links
-      - ./links:/config/links
-      - ./status-page:/config/status
-      - ./billy:/config/billy
+      - ./pages:/config/pages
       - /westside/databases/fileserver:/config/fileserver
     ports:
       - 80:80
