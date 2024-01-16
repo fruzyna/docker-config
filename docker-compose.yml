@@ -87,21 +87,6 @@ services:
       - 8085:80
     restart: unless-stopped
 
-  emulatorjs:
-    image: lscr.io/linuxserver/emulatorjs
-    container_name: emulatorjs
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=America/Chicago
-    volumes:
-      - /westside/config/emulatorjs:/config
-      - /westside/databases/emulatorjs:/data
-    ports:
-      - 8091:80
-      - 8092:3000
-    restart: unless-stopped
-
   finance-app:
     image: node
     container_name: finance-app
@@ -252,6 +237,13 @@ services:
       - /photo-import:/photoprism/import
     ports:
       - 8084:2342
+    restart: unless-stopped
+
+  speedtest:
+    image: ghcr.io/librespeed/speedtest
+    container_name: speedtest
+    ports:
+      - 8091:80
     restart: unless-stopped
 
   wiki:
