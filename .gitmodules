@@ -31,3 +31,6 @@
 [submodule "pages/status-page"]
 	path = pages/status-page
 	url = https://github.com/fruzyna/status-page
+[submodule "pages/anyraces"]
+	path = pages/anyraces
+	url = https://github.com/fruzyna/anyraces
