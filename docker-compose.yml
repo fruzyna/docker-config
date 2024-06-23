@@ -260,7 +260,7 @@ services:
     restart: unless-stopped
 
   wildrank-dev:
-    image: ghcr.io/wildstang/wildrank:2.3.1
+    image: ghcr.io/wildstang/wildrank:3.2.0
     container_name: wildrank-dev
     environment:
       - WR_WORKERS=1
@@ -273,7 +273,7 @@ services:
     restart: unless-stopped
 
   wildrank-test:
-    image: ghcr.io/wildstang/wildrank:2.3.1
+    image: ghcr.io/wildstang/wildrank:3.2.0
     container_name: wildrank-test
     environment:
       - WR_WORKERS=5
@@ -286,10 +286,10 @@ services:
     restart: unless-stopped
 
   wildrank:
-    image: ghcr.io/wildstang/wildrank:2.3.1
+    image: ghcr.io/wildstang/wildrank:3.2.0
     container_name: wildrank
     environment:
-      - WR_WORKERS=10
+      - WR_WORKERS=15
       - PASSWORD=deytookerclers
     volumes:
       - /westside/config/wildrank:/config
