@@ -78,7 +78,7 @@ services:
   #  restart: unless-stopped
 
   baikal:
-    image: ckulka/baikal:nginx
+    image: ghcr.io/mralucarddante/baikal-docker-hass
     container_name: baikal
     volumes:
       - /westside/config/baikal:/var/www/baikal/config
