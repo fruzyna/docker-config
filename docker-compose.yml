@@ -158,8 +158,7 @@ services:
       - /westside/config/home-assistant:/config
       - /westside/media:/media
     devices:
-      - /dev/ttyUSB0:/dev/ttyUSB0
-      - /dev/ttyUSB1:/dev/ttyUSB1
+      - /dev/serial/by-id/usb-Silicon_Labs_HubZ_Smart_Home_Controller_813005BC-if01-port0:/dev/ttyUSB1
     network_mode: host
     restart: unless-stopped
 
