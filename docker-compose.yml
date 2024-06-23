@@ -298,19 +298,32 @@ services:
       - 8081:80
     restart: unless-stopped
 
-  #
-  # Games
-  #
-
-  minecraft:
-    image: itzg/minecraft-server
-    container_name: minecraft
+  whisper:
+    image: lscr.io/linuxserver/faster-whisper
+    container_name: whisper
     environment:
-      - EULA=TRUE
+      - PUID=1000
+      - PGID=1000
+      - TZ=Americas/Chicago
+      - WHISPER_MODEL=base-int8
     volumes:
-      - /westside/config/minecraft:/data
+      - /westside/config/whisper:/config
     ports:
-      - 25565:25565
+      - 10300:10300
+    restart: unless-stopped
+
+  piper:
+    image: lscr.io/linuxserver/piper
+    container_name: piper
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Americas/Chicago
+      - PIPER_VOICE=en_US-lessac-medium
+    volumes:
+      - /westside/config/piper:/config
+    ports:
+      - 10200:10200
     restart: unless-stopped
 
 secrets:
