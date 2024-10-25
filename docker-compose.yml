@@ -255,17 +255,12 @@ services:
     restart: unless-stopped
 
   wiki:
-    image: ghcr.io/linuxserver/wikijs
+    image: squidfunk/mkdocs-material
     container_name: wiki
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=America/Chicago
     volumes:
-      - /westside/config/wiki:/config
-      - /westside/databases/wiki:/data
+      - /westside/config/wiki:/docs
     ports:
-      - 8088:3000
+      - 8088:8000
     restart: unless-stopped
 
   wildrank-dev:
