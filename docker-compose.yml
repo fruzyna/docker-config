@@ -179,6 +179,15 @@ services:
       - 7359:7359/udp
     restart: unless-stopped
 
+  metra:
+    image: ghcr.io/fruzyna/metra
+    container_name: metra
+    volumes:
+      - /westside/config/metra:/config
+    ports:
+      - 8089:80
+    restart: unless-stopped
+
   mqtt:
     image: eclipse-mosquitto
     container_name: mqtt
