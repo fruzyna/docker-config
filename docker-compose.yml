@@ -1,5 +1,3 @@
-version: '3.7'
-
 services:
 
   #
@@ -156,7 +154,7 @@ services:
       - TZ=America/Chicago
     volumes:
       - /westside/config/home-assistant:/config
-      - /westside/media:/media
+      - /westside/config/home-assistant-ssh:/root/.ssh
     devices:
       - /dev/serial/by-id/usb-Silicon_Labs_HubZ_Smart_Home_Controller_813005BC-if01-port0:/dev/ttyUSB1
     network_mode: host
@@ -264,7 +262,7 @@ services:
     restart: unless-stopped
 
   wildrank-dev:
-    image: ghcr.io/wildstang/wildrank:3.2.0
+    image: ghcr.io/wildstang/wildrank:250118
     container_name: wildrank-dev
     environment:
       - WR_WORKERS=1
@@ -277,7 +275,7 @@ services:
     restart: unless-stopped
 
   wildrank-test:
-    image: ghcr.io/wildstang/wildrank:3.2.0
+    image: ghcr.io/wildstang/wildrank:250118
     container_name: wildrank-test
     environment:
       - WR_WORKERS=5
