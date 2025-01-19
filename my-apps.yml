@@ -1,0 +1,87 @@
+services:
+
+  finance-app:
+    image: node
+    container_name: finance-app
+    working_dir: /app
+    command: ./install-and-start.sh
+    depends_on:
+      - finance-db
+    volumes:
+      - ./finance-v2:/app
+    ports:
+      - 8086:3000
+    restart: unless-stopped
+
+  finance-db:
+    image: mariadb
+    container_name: finance-db
+    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+    environment:
+      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/MYSQL_ROOT_PASSWORD
+      - MYSQL_PASSWORD_FILE=/run/secrets/MYSQL_PASSWORD
+      - MYSQL_DATABASE=finance-db
+      - MYSQL_USER=finance
+    secrets:
+      - MYSQL_ROOT_PASSWORD
+      - MYSQL_PASSWORD
+    volumes:
+      - /westside/config/finance/db:/var/lib/mysql
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - 3306:3306
+    restart: unless-stopped
+
+  metra:
+    image: ghcr.io/fruzyna/metra
+    container_name: metra
+    volumes:
+      - /westside/config/metra:/config
+    ports:
+      - 8089:80
+    restart: unless-stopped
+
+  wildrank:
+    image: ghcr.io/wildstang/wildrank:3.2.0
+    container_name: wildrank
+    environment:
+      - WR_WORKERS=15
+      - PASSWORD=deytookerclers
+    volumes:
+      - /westside/config/wildrank:/config
+      - /westside/databases/wildrank:/uploads
+    ports:
+      - 8081:80
+    restart: unless-stopped
+
+  wildrank-dev:
+    image: ghcr.io/wildstang/wildrank:250118
+    container_name: wildrank-dev
+    environment:
+      - WR_WORKERS=1
+      - PASSWORD=liamstestserver
+    volumes:
+      - /westside/config/wildrank-dev:/config
+      - /westside/databases/wildrank-dev:/uploads
+    ports:
+      - 8083:80
+    restart: unless-stopped
+
+  wildrank-test:
+    image: ghcr.io/wildstang/wildrank:250118
+    container_name: wildrank-test
+    environment:
+      - WR_WORKERS=5
+      - PASSWORD=testserver
+    volumes:
+      - /westside/config/wildrank-test:/config
+      - /westside/databases/wildrank-test:/uploads
+    ports:
+      - 8082:80
+    restart: unless-stopped
+
+secrets:
+  MYSQL_PASSWORD:
+    file: ./secrets/mysql_password
+  MYSQL_ROOT_PASSWORD:
+    file: ./secrets/mysql_root_password

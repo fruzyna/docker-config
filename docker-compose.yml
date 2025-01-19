@@ -1,3 +1,7 @@
+include:
+  - home-assistant.yml
+  - my-apps.yml
+
 services:
 
   #
@@ -66,15 +70,6 @@ services:
   # Services 
   #
 
-  #adminer:
-  #  image: adminer
-  #  container_name: adminer
-  #  depends_on:
-  #    - finance-db
-  #  ports:
-  #    - 8099:8080
-  #  restart: unless-stopped
-
   baikal:
     image: ghcr.io/mralucarddante/baikal-docker-hass
     container_name: baikal
@@ -83,38 +78,6 @@ services:
       - /westside/databases/baikal:/var/www/baikal/Specific
     ports:
       - 8085:80
-    restart: unless-stopped
-
-  finance-app:
-    image: node
-    container_name: finance-app
-    working_dir: /app
-    command: ./install-and-start.sh
-    depends_on:
-      - finance-db
-    volumes:
-      - ./finance-v2:/app
-    ports:
-      - 8086:3000
-    restart: unless-stopped
-
-  finance-db:
-    image: mariadb
-    container_name: finance-db
-    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
-    environment:
-      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/MYSQL_ROOT_PASSWORD
-      - MYSQL_PASSWORD_FILE=/run/secrets/MYSQL_PASSWORD
-      - MYSQL_DATABASE=finance-db
-      - MYSQL_USER=finance
-    secrets:
-      - MYSQL_ROOT_PASSWORD
-      - MYSQL_PASSWORD
-    volumes:
-      - /westside/config/finance/db:/var/lib/mysql
-      - /etc/localtime:/etc/localtime:ro
-    ports:
-      - 3306:3306
     restart: unless-stopped
 
   gitea-app:
@@ -145,34 +108,6 @@ services:
       - /etc/localtime:/etc/localtime:ro
     restart: unless-stopped
 
-  home-assistant:
-    image: ghcr.io/home-assistant/home-assistant:latest
-    container_name: home-assistant
-    depends_on:
-      - mqtt
-    environment:
-      - TZ=America/Chicago
-    volumes:
-      - /westside/config/home-assistant:/config
-      - /westside/config/home-assistant-ssh:/root/.ssh
-    devices:
-      - /dev/serial/by-id/usb-Silicon_Labs_HubZ_Smart_Home_Controller_813005BC-if01-port0:/dev/ttyUSB1
-    network_mode: host
-    restart: unless-stopped
-
-  music-assistant:
-    image: ghcr.io/music-assistant/server
-    container_name: music-assistant
-    volumes:
-      - /westside/config/music-assistant:/data
-    cap_add:
-      - SYS_ADMIN
-      - DAC_READ_SEARCH
-    security_opt:
-      - apparmor:unconfined
-    network_mode: host
-    restart: unless-stopped
-
   jellyfin:
     image: jellyfin/jellyfin
     container_name: jellyfin
@@ -188,25 +123,6 @@ services:
     ports:
       - 8096:8096
       - 7359:7359/udp
-    restart: unless-stopped
-
-  metra:
-    image: ghcr.io/fruzyna/metra
-    container_name: metra
-    volumes:
-      - /westside/config/metra:/config
-    ports:
-      - 8089:80
-    restart: unless-stopped
-
-  mqtt:
-    image: eclipse-mosquitto
-    container_name: mqtt
-    volumes:
-      - /westside/config/mqtt:/mosquitto
-    ports:
-      - 1883:1883
-      - 9001:9001
     restart: unless-stopped
 
   miniflux-app:
@@ -274,81 +190,6 @@ services:
       - 8088:8000
     restart: unless-stopped
 
-  wildrank-dev:
-    image: ghcr.io/wildstang/wildrank:250118
-    container_name: wildrank-dev
-    environment:
-      - WR_WORKERS=1
-      - PASSWORD=liamstestserver
-    volumes:
-      - /westside/config/wildrank-dev:/config
-      - /westside/databases/wildrank-dev:/uploads
-    ports:
-      - 8083:80
-    restart: unless-stopped
-
-  wildrank-test:
-    image: ghcr.io/wildstang/wildrank:250118
-    container_name: wildrank-test
-    environment:
-      - WR_WORKERS=5
-      - PASSWORD=testserver
-    volumes:
-      - /westside/config/wildrank-test:/config
-      - /westside/databases/wildrank-test:/uploads
-    ports:
-      - 8082:80
-    restart: unless-stopped
-
-  wildrank:
-    image: ghcr.io/wildstang/wildrank:3.2.0
-    container_name: wildrank
-    environment:
-      - WR_WORKERS=15
-      - PASSWORD=deytookerclers
-    volumes:
-      - /westside/config/wildrank:/config
-      - /westside/databases/wildrank:/uploads
-    ports:
-      - 8081:80
-    restart: unless-stopped
-
-  whisper:
-    image: lscr.io/linuxserver/faster-whisper:gpu
-    container_name: whisper
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Americas/Chicago
-      - WHISPER_MODEL=medium-int8
-      - WHISPER_BEAM=5
-    volumes:
-      - /westside/config/whisper:/config
-    ports:
-      - 10300:10300
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
-    restart: unless-stopped
-
-  piper:
-    image: lscr.io/linuxserver/piper
-    container_name: piper
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Americas/Chicago
-      - PIPER_VOICE=en_US-lessac-medium
-    volumes:
-      - /westside/config/piper:/config
-    ports:
-      - 10200:10200
-    restart: unless-stopped
-
 secrets:
   EMAIL:
     file: ./secrets/email
@@ -358,7 +199,3 @@ secrets:
     file: ./secrets/subdomains
   EXTRA_DOMAINS:
     file: ./secrets/extra_domains
-  MYSQL_PASSWORD:
-    file: ./secrets/mysql_password
-  MYSQL_ROOT_PASSWORD:
-    file: ./secrets/mysql_root_password
