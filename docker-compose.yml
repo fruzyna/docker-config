@@ -182,7 +182,7 @@ services:
     restart: unless-stopped
 
   wiki:
-    image: squidfunk/mkdocs-material
+    build: ./mkdocs
     container_name: wiki
     volumes:
       - /westside/config/wiki:/docs
