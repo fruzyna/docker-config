@@ -80,6 +80,16 @@ services:
       - 8082:80
     restart: unless-stopped
 
+  personal-site:
+    image: ghcr.io/fruzyna/site
+    container_name: personal-site
+    volumes:
+      - /westside/config/personal-site/pages:/app/pages
+      - /westside/config/personal-site/assets:/app/assets
+    ports:
+      - 8092:8000
+    restart: unless-stopped
+
 secrets:
   MYSQL_PASSWORD:
     file: ./secrets/mysql_password
