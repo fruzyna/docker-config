@@ -42,7 +42,7 @@ services:
     restart: unless-stopped
 
   wildrank:
-    image: ghcr.io/wildstang/wildrank:4.0.2
+    image: ghcr.io/wildstang/wildrank:4.1.4
     container_name: wildrank
     environment:
       - WR_WORKERS=15
@@ -55,7 +55,7 @@ services:
     restart: unless-stopped
 
   wildrank-dev:
-    image: ghcr.io/wildstang/wildrank:4.0.2
+    image: ghcr.io/wildstang/wildrank:4.1.4
     container_name: wildrank-dev
     environment:
       - WR_WORKERS=1
@@ -68,7 +68,7 @@ services:
     restart: unless-stopped
 
   wildrank-test:
-    image: ghcr.io/wildstang/wildrank:4.0.2
+    image: ghcr.io/wildstang/wildrank:4.1.4
     container_name: wildrank-test
     environment:
       - WR_WORKERS=5
