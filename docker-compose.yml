@@ -179,7 +179,7 @@ services:
     image: ghcr.io/librespeed/speedtest
     container_name: speedtest
     ports:
-      - 8091:80
+      - 8091:8080
     restart: unless-stopped
 
   wiki:
