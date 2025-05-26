@@ -16,7 +16,7 @@ services:
       - PGID=1000
       - TZ=America/Chicago
     volumes:
-      - /westside/config/ddclient:/config
+      - /wrigley/config/ddclient:/config
     restart: unless-stopped
 
   reverse-proxy:
@@ -44,8 +44,8 @@ services:
     volumes:
       - ./nginx:/config/nginx
       - ./pages:/config/pages
-      - /westside/config/nginx-logs:/config/log/nginx
-      - /westside/databases/fileserver:/config/fileserver
+      - /wrigley/config/nginx-logs:/config/log/nginx
+      - /wrigley/data/fileserver:/config/fileserver
     ports:
       - 80:80
       - 443:443
@@ -59,7 +59,7 @@ services:
       - PGID=1000
       - TZ=America/Chicago
     volumes:
-      - /westside/config/unifi:/config
+      - /wrigley/data/unifi:/config
     ports:
       - 8443:8443
       - 3478:3478/udp
@@ -75,8 +75,8 @@ services:
     image: ghcr.io/mralucarddante/baikal-docker-hass
     container_name: baikal
     volumes:
-      - /westside/config/baikal:/var/www/baikal/config
-      - /westside/databases/baikal:/var/www/baikal/Specific
+      - /wrigley/config/baikal:/var/www/baikal/config
+      - /wrigley/databases/baikal:/var/www/baikal/Specific
     ports:
       - 8085:80
     restart: unless-stopped
@@ -87,7 +87,7 @@ services:
     depends_on:
       - gitea-db
     volumes:
-      - /westside/config/gitea:/data
+      - /wrigley/data/gitea:/data
     ports:
       - 2222:0022
       - 8087:3000
@@ -105,7 +105,7 @@ services:
       - MYSQL_ROOT_PASSWORD
       - MYSQL_PASSWORD
     volumes:
-      - /westside/databases/gitea:/var/lib/mysql
+      - /wrigley/databases/gitea:/var/lib/mysql
       - /etc/localtime:/etc/localtime:ro
     restart: unless-stopped
 
@@ -116,11 +116,11 @@ services:
     environment:
       - JELLYFIN_PublishedServerUrl=http://192.168.16.11:8096
     volumes:
-      - /westside/config/jellyfin:/config
-      - /westside/databases/jellyfin:/cache
-      - /westside/media/music:/media/music
-      - /westside/media/movies:/media/movies
-      - /westside/media/tv:/media/tv
+      - /wrigley/data/jellyfin:/config
+      - /wrigley/data/jellyfin-cache:/cache
+      - /weeghman/media/music:/media/music
+      - /weeghman/media/movies:/media/movies
+      - /weeghman/media/tv:/media/tv
     ports:
       - 8096:8096
       - 7359:7359/udp
@@ -145,7 +145,7 @@ services:
       - POSTGRES_USER=
       - POSTGRES_PASSWORD=
     volumes:
-      - /westside/databases/miniflux:/var/lib/postgresql/data
+      - /wrigley/databases/miniflux:/var/lib/postgresql/data
     ports:
       - 5432:5432
     restart: unless-stopped
@@ -168,8 +168,8 @@ services:
       PHOTOPRISM_JPEG_QUALITY: 92
       PHOTOPRISM_DISABLE_CHOWN: "true"
     volumes:
-      - /westside/config/photoprism:/photoprism/storage
-      - /westside/media/pictures:/photoprism/originals
+      - /wrigley/data/photoprism:/photoprism/storage
+      - /weeghman/media/pictures:/photoprism/originals
       - /photo-import:/photoprism/import
     ports:
       - 8084:2342
@@ -186,8 +186,8 @@ services:
     build: ./mkdocs
     container_name: wiki
     volumes:
-      - /westside/config/wiki:/docs
-      - /westside/archive/Wiki:/docs/docs
+      - /wrigley/config/wiki:/docs
+      - /wrigley/liam/Wiki:/docs/docs
     ports:
       - 8088:8000
     restart: unless-stopped

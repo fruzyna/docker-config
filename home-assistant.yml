@@ -8,8 +8,8 @@ services:
     environment:
       - TZ=America/Chicago
     volumes:
-      - /westside/config/home-assistant:/config
-      - /westside/config/home-assistant-ssh:/root/.ssh
+      - /wrigley/data/home-assistant:/config
+      - /wrigley/config/home-assistant-ssh:/root/.ssh
     devices:
       - /dev/serial/by-id/usb-Silicon_Labs_HubZ_Smart_Home_Controller_813005BC-if01-port0:/dev/ttyUSB1
     network_mode: host
@@ -19,7 +19,7 @@ services:
     image: eclipse-mosquitto
     container_name: mqtt
     volumes:
-      - /westside/config/mqtt:/mosquitto
+      - /wrigley/config/mqtt:/mosquitto
     ports:
       - 1883:1883
       - 9001:9001
@@ -29,7 +29,7 @@ services:
     image: ghcr.io/music-assistant/server
     container_name: music-assistant
     volumes:
-      - /westside/config/music-assistant:/data
+      - /wrigley/config/music-assistant:/data
     cap_add:
       - SYS_ADMIN
       - DAC_READ_SEARCH
@@ -47,13 +47,13 @@ services:
       - TZ=Americas/Chicago
       - PIPER_VOICE=en_US-lessac-medium
     volumes:
-      - /westside/config/piper:/config
+      - /wrigley/data/piper:/config
     ports:
       - 10200:10200
     restart: unless-stopped
 
   whisper:
-    image: lscr.io/linuxserver/faster-whisper:gpu
+    image: lscr.io/linuxserver/faster-whisper:gpu-version-v2.3.0
     container_name: whisper
     environment:
       - PUID=1000
@@ -62,7 +62,7 @@ services:
       - WHISPER_MODEL=medium-int8
       - WHISPER_BEAM=5
     volumes:
-      - /westside/config/whisper:/config
+      - /wrigley/data/whisper:/config
     ports:
       - 10300:10300
     deploy:

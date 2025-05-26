@@ -26,7 +26,7 @@ services:
       - MYSQL_ROOT_PASSWORD
       - MYSQL_PASSWORD
     volumes:
-      - /westside/config/finance/db:/var/lib/mysql
+      - /wrigley/databases/finance/db:/var/lib/mysql
       - /etc/localtime:/etc/localtime:ro
     ports:
       - 3306:3306
@@ -36,7 +36,7 @@ services:
     image: ghcr.io/fruzyna/metra
     container_name: metra
     volumes:
-      - /westside/config/metra:/config
+      - /wrigley/config/metra:/config
     ports:
       - 8089:80
     restart: unless-stopped
@@ -48,8 +48,8 @@ services:
       - WR_WORKERS=15
       - PASSWORD=deytookerclers
     volumes:
-      - /westside/config/wildrank:/config
-      - /westside/databases/wildrank:/uploads
+      - /wrigley/config/wildrank:/config
+      - /wrigley/data/wildrank:/uploads
     ports:
       - 8081:80
     restart: unless-stopped
@@ -61,8 +61,8 @@ services:
       - WR_WORKERS=1
       - PASSWORD=liamstestserver
     volumes:
-      - /westside/config/wildrank-dev:/config
-      - /westside/databases/wildrank-dev:/uploads
+      - /wrigley/config/wildrank-dev:/config
+      - /wrigley/data/wildrank-dev:/uploads
     ports:
       - 8083:80
     restart: unless-stopped
@@ -74,8 +74,8 @@ services:
       - WR_WORKERS=5
       - PASSWORD=testserver
     volumes:
-      - /westside/config/wildrank-test:/config
-      - /westside/databases/wildrank-test:/uploads
+      - /wrigley/config/wildrank-test:/config
+      - /wrigley/data/wildrank-test:/uploads
     ports:
       - 8082:80
     restart: unless-stopped
@@ -84,8 +84,8 @@ services:
     image: ghcr.io/fruzyna/site
     container_name: personal-site
     volumes:
-      - /westside/config/personal-site/pages:/app/pages
-      - /westside/config/personal-site/assets:/app/assets
+      - /wrigley/config/personal-site/pages:/app/pages
+      - /wrigley/config/personal-site/assets:/app/assets
     ports:
       - 8092:8000
     restart: unless-stopped
