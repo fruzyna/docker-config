@@ -1,6 +1,7 @@
 include:
   - home-assistant.yml
   - my-apps.yml
+  - immich.yml
 
 services:
 
@@ -148,31 +149,6 @@ services:
       - /wrigley/databases/miniflux:/var/lib/postgresql/data
     ports:
       - 5432:5432
-    restart: unless-stopped
-
-  photoprism:
-    image: photoprism/photoprism
-    container_name: photoprism
-    user: "1000:1000"
-    security_opt:
-      - seccomp:unconfined
-      - apparmor:unconfined
-    environment:
-      PHOTOPRISM_ADMIN_PASSWORD: ""
-      PHOTOPRISM_SITE_URL: "http://photos.fruzyna.net/"
-      PHOTOPRISM_SITE_AUTHOR: "Liam Fruzyna"
-      PHOTOPRISM_SITE_TITLE: "Liam's Photos"
-      PHOTOPRISM_SITE_CAPTION: ""
-      PHOTOPRISM_SITE_DESCRIPTION: ""
-      PHOTOPRISM_HTTP_HOST: "0.0.0.0"
-      PHOTOPRISM_JPEG_QUALITY: 92
-      PHOTOPRISM_DISABLE_CHOWN: "true"
-    volumes:
-      - /wrigley/data/photoprism:/photoprism/storage
-      - /weeghman/media/pictures:/photoprism/originals
-      - /photo-import:/photoprism/import
-    ports:
-      - 8084:2342
     restart: unless-stopped
 
   speedtest:

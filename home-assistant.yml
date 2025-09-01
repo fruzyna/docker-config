@@ -53,7 +53,7 @@ services:
     restart: unless-stopped
 
   whisper:
-    image: lscr.io/linuxserver/faster-whisper:gpu-version-v2.3.0
+    image: lscr.io/linuxserver/faster-whisper:gpu-v2.3.0-ls49
     container_name: whisper
     environment:
       - PUID=1000

@@ -55,7 +55,7 @@ services:
     restart: unless-stopped
 
   wildrank-dev:
-    image: ghcr.io/wildstang/wildrank:4.1.4
+    image: ghcr.io/wildstang/wildrank:250725-r2oc
     container_name: wildrank-dev
     environment:
       - WR_WORKERS=1
