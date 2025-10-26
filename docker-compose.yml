@@ -1,24 +1,11 @@
 include:
-  - home-assistant.yml
   - my-apps.yml
-  - immich.yml
 
 services:
 
   #
   # Networking
   #
-
-  ddclient:
-    image: ghcr.io/linuxserver/ddclient:latest
-    container_name: ddclient
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=America/Chicago
-    volumes:
-      - /wrigley/config/ddclient:/config
-    restart: unless-stopped
 
   reverse-proxy:
     image: ghcr.io/linuxserver/swag:latest
@@ -108,23 +95,6 @@ services:
     volumes:
       - /wrigley/databases/gitea:/var/lib/mysql
       - /etc/localtime:/etc/localtime:ro
-    restart: unless-stopped
-
-  jellyfin:
-    image: jellyfin/jellyfin
-    container_name: jellyfin
-    user: 1000:1000
-    environment:
-      - JELLYFIN_PublishedServerUrl=http://192.168.16.11:8096
-    volumes:
-      - /wrigley/data/jellyfin:/config
-      - /wrigley/data/jellyfin-cache:/cache
-      - /weeghman/media/music:/media/music
-      - /weeghman/media/movies:/media/movies
-      - /weeghman/media/tv:/media/tv
-    ports:
-      - 8096:8096
-      - 7359:7359/udp
     restart: unless-stopped
 
   miniflux-app:
