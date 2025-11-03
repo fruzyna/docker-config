@@ -1,0 +1,60 @@
+services:
+
+  baikal:
+    image: docker.io/ckulka/baikal
+    container_name: baikal
+    volumes:
+      - ${CONFIG_DIR}/baikal:/var/www/baikal/config:Z
+      - ${DB_DIR}/baikal:/var/www/baikal/Specific:Z
+    ports:
+      - ${BAIKAL_PORT}:80
+    restart: always
+
+  gitea:
+    image: docker.gitea.com/gitea
+    container_name: gitea
+    environment:
+      - USER_UID=${USER_ID}
+      - USER_GID=${USER_ID}
+    volumes:
+      - ${DATA_DIR}/gitea:/data:Z
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - ${GITEA_PORT}:3000
+    restart: always
+
+  miniflux-app:
+    image: docker.io/miniflux/miniflux
+    container_name: miniflux-app
+    depends_on:
+      - miniflux-db
+    env_file: secrets/miniflux.env
+    environment:
+      - RUN_MIGRATIONS=1
+      - CREATE_ADMIN=1
+      - ADMIN_USERNAME=admin
+    ports:
+      - ${MINIFLUX_PORT}:8080
+    restart: always
+
+  miniflux-db:
+    image: docker.io/postgres:17-alpine
+    container_name: miniflux-db
+    env_file: secrets/miniflux.env
+    environment:
+      - POSTGRES_USER=miniflux
+      - POSTGRES_DB=miniflux
+    volumes:
+      - ${DB_DIR}/miniflux:/var/lib/postgresql/data:Z
+    restart: always
+
+  wiki:
+    build: ./mkdocs
+    container_name: wiki
+    volumes:
+      - ${CONFIG_DIR}/wiki:/docs:Z
+      - ${LIAM_DIR}/Wiki:/docs/docs:Z
+    ports:
+      - ${WIKI_PORT}:8000
+    restart: always
+

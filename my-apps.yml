@@ -1,97 +1,91 @@
 services:
 
   finance-app:
-    image: node
+    build: ./finance-v2
     container_name: finance-app
-    working_dir: /app
     command: ./install-and-start.sh
     depends_on:
       - finance-db
     volumes:
-      - ./finance-v2:/app
+      - ./finance-v2:/app:Z
     ports:
-      - 8086:3000
-    restart: unless-stopped
+      - ${FINANCE_PORT}:3000
+    restart: always
 
   finance-db:
-    image: mariadb
+    image: docker.io/mariadb
     container_name: finance-db
     command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+    env_file: secrets/finance.env
     environment:
-      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/MYSQL_ROOT_PASSWORD
-      - MYSQL_PASSWORD_FILE=/run/secrets/MYSQL_PASSWORD
       - MYSQL_DATABASE=finance-db
       - MYSQL_USER=finance
-    secrets:
-      - MYSQL_ROOT_PASSWORD
-      - MYSQL_PASSWORD
     volumes:
-      - /wrigley/databases/finance/db:/var/lib/mysql
+      - ${DB_DIR}/finance:/var/lib/mysql:Z
       - /etc/localtime:/etc/localtime:ro
-    ports:
-      - 3306:3306
-    restart: unless-stopped
+    restart: always
 
   metra:
-    image: ghcr.io/fruzyna/metra
+    image: ${MY_REGISTRY}/metra
     container_name: metra
     volumes:
-      - /wrigley/config/metra:/config
+      - ${CONFIG_DIR}/metra:/config:Z
     ports:
-      - 8089:80
-    restart: unless-stopped
-
-  wildrank:
-    image: ghcr.io/wildstang/wildrank:4.1.4
-    container_name: wildrank
-    environment:
-      - WR_WORKERS=15
-      - PASSWORD=deytookerclers
-    volumes:
-      - /wrigley/config/wildrank:/config
-      - /wrigley/data/wildrank:/uploads
-    ports:
-      - 8081:80
-    restart: unless-stopped
-
-  wildrank-dev:
-    image: ghcr.io/wildstang/wildrank:250725-r2oc
-    container_name: wildrank-dev
-    environment:
-      - WR_WORKERS=1
-      - PASSWORD=liamstestserver
-    volumes:
-      - /wrigley/config/wildrank-dev:/config
-      - /wrigley/data/wildrank-dev:/uploads
-    ports:
-      - 8083:80
-    restart: unless-stopped
-
-  wildrank-test:
-    image: ghcr.io/wildstang/wildrank:4.1.4
-    container_name: wildrank-test
-    environment:
-      - WR_WORKERS=5
-      - PASSWORD=testserver
-    volumes:
-      - /wrigley/config/wildrank-test:/config
-      - /wrigley/data/wildrank-test:/uploads
-    ports:
-      - 8082:80
-    restart: unless-stopped
+      - ${METRA_PORT}:80
+    restart: always
 
   personal-site:
-    image: ghcr.io/fruzyna/site
+    image: ${MY_REGISTRY}/site
     container_name: personal-site
     volumes:
-      - /wrigley/config/personal-site/pages:/app/pages
-      - /wrigley/config/personal-site/assets:/app/assets
+      - ${CONFIG_DIR}/personal-site/pages:/app/pages:Z
+      - ${CONFIG_DIR}/personal-site/assets:/app/assets:Z
     ports:
-      - 8092:8000
-    restart: unless-stopped
+      - ${PERSONAL_PORT}:8000
+    restart: always
 
-secrets:
-  MYSQL_PASSWORD:
-    file: ./secrets/mysql_password
-  MYSQL_ROOT_PASSWORD:
-    file: ./secrets/mysql_root_password
+  races:
+    image: ${MY_REGISTRY}/races
+    container_name: races
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - ${RACES_PORT}:8000
+    restart: always
+
+  wildrank:
+    image: ${WS_REGISTRY}/wildrank:4.1.4
+    container_name: wildrank
+    env_file: secrets/wildrank.env
+    environment:
+      - WR_WORKERS=15
+    volumes:
+      - ${CONFIG_DIR}/wildrank:/config:Z
+    ports:
+      - ${WILDRANK_PORT}:80
+    restart: always
+
+  wildrank-test:
+    image: ${WS_REGISTRY}/wildrank:4.1.4
+    container_name: wildrank-test
+    env_file: secrets/wildrank.env
+    environment:
+      - WR_WORKERS=5
+    volumes:
+      - ${CONFIG_DIR}/wildrank-test:/config:Z
+    ports:
+      - ${WILDRANK_TEST_PORT}:80
+    restart: always
+
+  wildrank-dev:
+    image: ${WS_REGISTRY}/wildrank:250725-r2oc
+    container_name: wildrank-dev
+    env_file: secrets/wildrank.env
+    environment:
+      - WR_WORKERS=1
+    volumes:
+      - ${CONFIG_DIR}/wildrank-dev:/config:Z
+    ports:
+      - ${WILDRANK_DEV_PORT}:80
+    restart: always
+
