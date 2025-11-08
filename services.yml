@@ -52,7 +52,7 @@ services:
     build: ./mkdocs
     container_name: wiki
     volumes:
-      - ${CONFIG_DIR}/wiki:/docs:Z
+      - ${CONFIG_DIR}/wiki/mkdocs.yml:/docs/mkdocs.yml:Z
       - ${LIAM_DIR}/Wiki:/docs/docs:Z
     ports:
       - ${WIKI_PORT}:8000
