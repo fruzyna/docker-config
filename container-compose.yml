@@ -62,3 +62,15 @@ services:
       - ${DB_DIR}/unifi:/data/db:Z
       - ${CONFIG_DIR}/unifi-db/init-mongo.sh:/docker-entrypoint-initdb.d/init-mongo.sh:Z,ro
     restart: always
+
+  cups:
+    build: ./cups
+    container_name: cups
+    privileged: true
+    volumes:
+      - ${CONFIG_DIR}/cups:/etc/cups:Z
+      - /var/run/dbus:/var/run/dbus:Z,ro
+      - /dev/bus/usb/001:/dev/bus/usb/001:Z
+    ports:
+      - 631:631
+    restart: always
